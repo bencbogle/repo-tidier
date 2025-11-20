@@ -116,6 +116,94 @@ def summary(
     console.print(table)
 
 
+@app.command()
+def types(
+    path: str = typer.Argument(..., help="Path to the directory to scan"),
+    exclude: list[str] = typer.Option(
+        default=[], help="Additional patterns to exclude (e.g., .git, node_modules)"
+    ),
+    top: int = typer.Option(None, "--top", help="Show only the top N file types"),
+    summary_only: bool = typer.Option(
+        False, "--summary", help="Show only the count of unique file types"
+    ),
+):
+    """Show unique file extensions and their counts."""
+    path_obj = Path(path)
+
+    try:
+        # Build exclude patterns (combine defaults with user-provided)
+        exclude_patterns = set(exclude) if exclude else None
+
+        # Scan directory with filters - always files only for types command
+        files = scan_directory(
+            path_obj,
+            exclude_patterns=exclude_patterns,
+            only_files=True,  # File types only make sense for files
+            extensions=None,  # We want all extensions for types
+            sort_by=None,  # No need to sort files for types command
+            reverse=False,
+        )
+    except PathError as e:
+        console.print(f"[bold red]Error:[/bold red] {e}", style="red")
+        raise typer.Exit(code=1)
+    except PermissionError as e:
+        console.print(
+            f"[bold red]Permission Error:[/bold red] Cannot access {path_obj}", style="red"
+        )
+        console.print(f"[dim]{e}[/dim]")
+        raise typer.Exit(code=1)
+
+    # Calculate statistics to get file types
+    stats = calculate_statistics(files)
+
+    if not stats.files_by_extension:
+        console.print(f"[yellow]No file types found in {path_obj}[/yellow]")
+        return
+
+    # Sort by count descending
+    sorted_exts = sorted(stats.files_by_extension.items(), key=lambda x: x[1], reverse=True)
+
+    # Limit to top N if specified
+    if top:
+        sorted_exts = sorted_exts[:top]
+
+    # Summary only mode
+    if summary_only:
+        total_types = len(stats.files_by_extension)
+        console.print(
+            Panel(
+                f"[bold green]{total_types}[/bold green] unique file types",
+                title="File Types Summary",
+                border_style="blue",
+            )
+        )
+        return
+
+    # Display in a Rich table
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Extension", style="cyan", width=20)
+    table.add_column("Count", justify="right", style="yellow")
+
+    for ext, count in sorted_exts:
+        # Format extension display
+        ext_display = ext if ext else "(no extension)"
+        # Pluralize "file" vs "files"
+        file_word = "file" if count == 1 else "files"
+        table.add_row(ext_display, f"{count} {file_word}")
+
+    # Header with total count
+    total_types = len(stats.files_by_extension)
+    header_text = (
+        f"Found [bold green]{total_types}[/bold green] file type"
+        f"{'s' if total_types != 1 else ''} in [cyan]{path_obj}[/cyan]"
+    )
+    if top and top < total_types:
+        header_text += f" (showing top [bold]{top}[/bold])"
+
+    console.print(Panel(header_text, border_style="blue"))
+    console.print(table)
+
+
 def main():
     app()
 
