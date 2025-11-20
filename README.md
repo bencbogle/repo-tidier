@@ -86,3 +86,26 @@ uv run repo-tidier summary . --exclude node_modules --exclude dist
 - Python 3.13+
 - [uv](https://github.com/astral-sh/uv) for package management
 
+## Development
+
+This project uses:
+
+- **[ruff](https://github.com/astral-sh/ruff)** for linting and code formatting
+- **[mypy](https://mypy.readthedocs.io/)** for static type checking
+- **[pytest](https://pytest.org/)** for testing
+
+### Running checks
+
+```bash
+# Run linting
+uv run ruff check src/
+
+# Run type checking
+uv run mypy src/
+
+# Run tests
+uv run pytest tests/
+```
+
+Pre-commit hooks are configured to automatically run `ruff` and `ruff-format` before each commit.
+
