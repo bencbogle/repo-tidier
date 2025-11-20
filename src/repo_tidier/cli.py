@@ -15,11 +15,12 @@ def callback():
 
 def format_size(size_bytes: int) -> str:
     """Format bytes into human-readable size."""
+    size = float(size_bytes)  # Convert to float for division
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if size_bytes < 1024.0:
-            return f"{size_bytes:.1f} {unit}"
-        size_bytes /= 1024.0
-    return f"{size_bytes:.1f} PB"
+        if size < 1024.0:
+            return f"{size:.1f} {unit}"
+        size /= 1024.0
+    return f"{size:.1f} PB"
 
 @app.command()
 def summary(
@@ -32,7 +33,7 @@ def summary(
     limit: int = typer.Option(None, help="Limit number of results shown")
 ):
     """Generate a summary of the repository."""
-    path = Path(path)
+    path_obj = Path(path)
     
     try:
         # Build exclude patterns (combine defaults with user-provided)
@@ -40,10 +41,10 @@ def summary(
         
         # Scan directory with filters and sorting
         files = scan_directory(
-        path,
-        exclude_patterns=exclude_patterns,
-        only_files=only_files,
-        extensions=extensions if extensions else None,
+            path_obj,
+            exclude_patterns=exclude_patterns,
+            only_files=only_files,
+            extensions=extensions if extensions else None,
             sort_by=sort_by if sort_by else None,
             reverse=reverse
         )
@@ -51,7 +52,7 @@ def summary(
         console.print(f"[bold red]Error:[/bold red] {e}", style="red")
         raise typer.Exit(code=1)
     except PermissionError as e:
-        console.print(f"[bold red]Permission Error:[/bold red] Cannot access {path}", style="red")
+        console.print(f"[bold red]Permission Error:[/bold red] Cannot access {path_obj}", style="red")
         console.print(f"[dim]{e}[/dim]")
         raise typer.Exit(code=1)
     
@@ -64,7 +65,7 @@ def summary(
     # Display summary in a panel with statistics
     total_text = f"{len(files)} total" if limit and len(files) > limit else f"{len(files)}"
     stats_lines = [
-        f"Found [bold green]{total_text}[/bold green] files in [cyan]{path}[/cyan]",
+        f"Found [bold green]{total_text}[/bold green] files in [cyan]{path_obj}[/cyan]",
         f"Total size: [bold yellow]{format_size(stats.total_size)}[/bold yellow]",
         f"Files: [cyan]{stats.total_files}[/cyan] | Avg size: [yellow]{format_size(int(stats.average_size))}[/yellow]"
     ]
