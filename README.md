@@ -7,8 +7,36 @@ A command-line tool to analyse and summarise repository file structures with bea
 - 📊 **Rich statistics**: Total size, file counts, largest/smallest files, average size
 - 🔍 **Smart filtering**: Filter by file extensions, exclude common directories (`.git`, `.venv`, `__pycache__`, etc.)
 - 📈 **Sorting & limiting**: Sort by size or name, limit results
+- 📋 **File type analysis**: Discover all file types in your repository with counts
 - 🎨 **Beautiful output**: Rich-formatted tables and panels with colours
 - ✅ **Error handling**: Clear error messages for invalid paths
+
+## Quickstart
+
+Get started in seconds:
+
+```bash
+# Install dependencies
+uv sync
+
+# Get a quick summary of your repo
+uv run repo-tidier summary .
+```
+
+**More examples**:
+```bash
+# See what file types are in your repo
+uv run repo-tidier types .
+
+# Find the top 5 most common file types
+uv run repo-tidier types . --top 5
+
+# Discover what's taking up space
+uv run repo-tidier summary . --sort-by size --limit 5
+
+# Check only Python files
+uv run repo-tidier summary . --extensions .py
+```
 
 ## Installation
 
@@ -56,14 +84,48 @@ uv run repo-tidier summary . --sort-by size --limit 10
 uv run repo-tidier summary . --exclude node_modules --exclude dist
 ```
 
-## Options
+### File types analysis
 
+Show all unique file extensions and their counts:
+
+```bash
+uv run repo-tidier types .
+```
+
+Show only the top 5 file types:
+
+```bash
+uv run repo-tidier types . --top 5
+```
+
+Get a quick count of unique file types:
+
+```bash
+uv run repo-tidier types . --summary
+```
+
+## Commands
+
+### `summary`
+
+Generate a comprehensive summary of the repository structure.
+
+**Options:**
 - `--files-only`: Show only files, exclude directories
 - `--extensions`: Filter by file extensions (e.g., `.py .js`)
 - `--exclude`: Additional patterns to exclude
 - `--sort-by`: Sort by `size` or `name` (default: `size`)
 - `--reverse` / `--no-reverse`: Sort order (default: reverse)
 - `--limit`: Limit number of results shown
+
+### `types`
+
+Show unique file extensions and their counts in the repository.
+
+**Options:**
+- `--top`: Show only the top N file types
+- `--summary`: Show only the count of unique file types
+- `--exclude`: Additional patterns to exclude (e.g., `.git`, `node_modules`)
 
 ## Example Output
 
